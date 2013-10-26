@@ -29,8 +29,7 @@ public class Wind : MonoBehaviour {
 	}
 	
 	void OnTriggerStay(Collider other) {
-		Wind goAsWind = other.gameObject.GetComponent<Wind>();
-		if(spawner != null && goAsWind == null && other != spawner)
+		if(spawner != null && other != spawner)
 		{
         	other.transform.Translate(direction*Constants.windForce, Space.World);
 		}

@@ -48,6 +48,9 @@
      <Compile Include="Assets\Scripts\Board.cs" />
      <Compile Include="Assets\Scripts\Character.cs" />
      <Compile Include="Assets\Scripts\Constants.cs" />
+     <Compile Include="Assets\Scripts\Hole.cs" />
+     <Compile Include="Assets\Scripts\Pit.cs" />
+     <Compile Include="Assets\Scripts\Sprite.cs" />
      <Compile Include="Assets\Scripts\Wind.cs" />
      <None Include="Assets\Standard Assets\Particles\Sources\Shaders\Particle Alpha Blend (Queue +100).shader" />
      <None Include="Assets\Standard Assets\Skyboxes\_skybox info.txt" />

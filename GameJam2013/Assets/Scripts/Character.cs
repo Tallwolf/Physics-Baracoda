@@ -27,13 +27,25 @@ public class Character : MonoBehaviour {
 	
 	private MyAnimation curAnim;
 	
+	private Sprite mySprite;
+	
 	private static int playerNums = 1;
+	
+	private float deathTimer;
+	
+	private Vector3 spawnPoint;
 
 	// Use this for initialization
 	void Start () {
 		
+		deathTimer = 0.0f;
+		
+		mySprite = this.GetComponentInChildren<Sprite>();
+		mySprite.renderer.material.color = Color.white;
+		
 		charNum = playerNums++;
 		moveDirection = transform.TransformDirection(Vector3.forward);
+		spawnPoint = transform.position;
 		xAxis = "Y" + charNum;
 		yAxis = "X" + charNum;
 		lxAxis = "LX" + charNum;
@@ -49,33 +61,56 @@ public class Character : MonoBehaviour {
 			walkTextures[2] = Resources.Load("Animations/PlayerWalk/necro_walk_3") as Texture2D;
 			
 			castTextures = new Texture2D[4];
-			castTextures[0] = Resources.Load("Animations/PlayerWalk/necro_cast_1") as Texture2D;
-			castTextures[1] = Resources.Load("Animations/PlayerWalk/necro_cast_2") as Texture2D;
-			castTextures[2] = Resources.Load("Animations/PlayerWalk/necro_cast_3") as Texture2D;
+			castTextures[0] = Resources.Load("Animations/PlayerCast/necro_cast_1") as Texture2D;
+			castTextures[1] = Resources.Load("Animations/PlayerCast/necro_cast_2") as Texture2D;
+			castTextures[2] = Resources.Load("Animations/PlayerCast/necro_cast_3") as Texture2D;
+			castTextures[3] = Resources.Load("Animations/PlayerCast/necro_cast_4") as Texture2D;
 			
 			idleTextures = new Texture2D[1];
 			idleTextures[0] = Resources.Load("Animations/PlayerIdle/necro_idle_1") as Texture2D;
 		}
 		
-		walkAnim = new MyAnimation(this.renderer, walkTextures, Constants.playerAnimSpeed);
-		idleAnim = new MyAnimation(this.renderer, idleTextures, Constants.playerAnimSpeed);
-		castAnim = new MyAnimation(this.renderer, castTextures, Constants.playerAnimSpeed);
+		walkAnim = new MyAnimation(mySprite.renderer, walkTextures, Constants.playerAnimSpeed, true);
+		idleAnim = new MyAnimation(mySprite.renderer, idleTextures, Constants.playerAnimSpeed, true);
+		castAnim = new MyAnimation(mySprite.renderer, castTextures, Constants.playerAnimSpeed, false);
 		
 		wind = Resources.Load("Prefabs/Wind") as GameObject;
 		windPos = (wind.transform.localScale.z + this.transform.localScale.z)*0.5f;
 		
 		curAnim = idleAnim;
 		curAnim.Play();
+		
+		windCoolTime = 0;
+	}
+	
+	void SwapAnim( MyAnimation toSwap )
+	{
+		if(curAnim != toSwap)
+		{
+			curAnim.Pause();
+			curAnim = toSwap;
+			curAnim.Play();
+		}
 	}
 	
 	// Update is called once per frame
 	void Update () {
 		
+		if(deathTimer > 0)
+		{
+			deathTimer -= Time.deltaTime;
+			if(deathTimer <=0)
+			{
+				Respawn();
+			}
+			return;
+		}
+		
+		//keep in the level
 		float tempx = Mathf.Clamp(this.transform.position.x, Board.left, Board.right);
 		float tempy = this.transform.position.y;
 		float tempz = Mathf.Clamp(this.transform.position.z, Board.bottom, Board.top);
 		Vector3 temp = new Vector3(tempx, tempy, tempz);
-		
 		this.transform.position = temp;
 		
 		if (!isControllable)
@@ -88,6 +123,7 @@ public class Character : MonoBehaviour {
 	
 		Vector3 right = Vector3.right;
 		
+		//get control info
 		float iy = Input.GetAxisRaw(xAxis);
 		float ix = Input.GetAxisRaw(yAxis);
 		float ilx = Input.GetAxisRaw(lxAxis);
@@ -101,17 +137,16 @@ public class Character : MonoBehaviour {
 		
 		moveDirection = TarMoveDir.normalized;
 		
-		if(TarMoveDir != Vector3.zero)
+		if(windCoolTime <= 0)
 		{
-			curAnim.Pause();
-			curAnim = walkAnim;
-			curAnim.Play();
-		}
-		else
-		{
-			curAnim.Pause();
-			curAnim = idleAnim;
-			curAnim.Play();
+			if(TarMoveDir != Vector3.zero)
+			{
+				SwapAnim(walkAnim);
+			}
+			else
+			{
+				SwapAnim(idleAnim);
+			}
 		}
 		
 		if( TarLookDir != Vector3.zero )
@@ -138,13 +173,30 @@ public class Character : MonoBehaviour {
 			Wind wnd = go.GetComponent<Wind>();
 			wnd.SetSpawner(this.collider);
 			windCoolTime += Constants.playerWindCooldown;
+			SwapAnim(castAnim);
 		}
 		else if (windCoolTime > 0)
 		{
 			windCoolTime -= Time.deltaTime;
 		}
 		
-		
 		curAnim.Update();
 	}
+	
+	public void Die()
+	{
+		deathTimer = Constants.playerRespawnTime;
+		this.transform.position = new Vector3(0.0f,0.0f, 100.0f);
+	}
+	
+	public void Respawn()
+	{
+		this.transform.position = spawnPoint;
+		deathTimer = 0;
+	}
+	
+	void OnTriggerEnter(Collider other) {
+		
+		//Destroy(other.gameObject);
+    }
 }
