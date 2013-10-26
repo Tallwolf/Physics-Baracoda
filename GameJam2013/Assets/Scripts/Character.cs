@@ -15,6 +15,15 @@ public class Character : MonoBehaviour {
 	private string yAxis;
 	private string lyAxis;
 	private string lxAxis;
+	
+	private Texture2D[] walkTextures;
+	private Texture2D[] castTextures;
+	private Texture2D[] idleTextures;
+	private MyAnimation walkAnim;
+	private MyAnimation idleAnim;
+	private MyAnimation castAnim;
+	
+	private MyAnimation curAnim;
 
 	// Use this for initialization
 	void Start () {
@@ -23,6 +32,26 @@ public class Character : MonoBehaviour {
 		yAxis = "X" + charNum;
 		lxAxis = "LX" + charNum;
 		lyAxis = "LY" + charNum;
+		
+		walkTextures = new Texture2D[3];
+		walkTextures[0] = Resources.Load("Animations/PlayerWalk/necro_walk_1") as Texture2D;
+		walkTextures[1] = Resources.Load("Animations/PlayerWalk/necro_walk_2") as Texture2D;
+		walkTextures[2] = Resources.Load("Animations/PlayerWalk/necro_walk_3") as Texture2D;
+		
+		castTextures = new Texture2D[4];
+		castTextures[0] = Resources.Load("Animations/PlayerWalk/necro_cast_1") as Texture2D;
+		castTextures[1] = Resources.Load("Animations/PlayerWalk/necro_cast_2") as Texture2D;
+		castTextures[2] = Resources.Load("Animations/PlayerWalk/necro_cast_3") as Texture2D;
+		
+		idleTextures = new Texture2D[1];
+		idleTextures[0] = Resources.Load("Animations/PlayerIdle/necro_idle_1") as Texture2D;
+		
+		walkAnim = new MyAnimation(this.renderer, walkTextures, 200.0f);
+		idleAnim = new MyAnimation(this.renderer, idleTextures, 200.0f);
+		castAnim = new MyAnimation(this.renderer, castTextures, 200.0f);
+		
+		curAnim = idleAnim;
+		curAnim.Play();
 	}
 	
 	// Update is called once per frame
@@ -49,10 +78,24 @@ public class Character : MonoBehaviour {
 		
 		moveDirection = TarMoveDir.normalized;
 		
+		if(TarMoveDir != Vector3.zero)
+		{
+			curAnim.Pause();
+			curAnim = walkAnim;
+			curAnim.Play();
+		}
+		else
+		{
+			curAnim.Pause();
+			curAnim = idleAnim;
+			curAnim.Play();
+		}
+		
 		if( TarLookDir != Vector3.zero )
 		{
 			lookDirection = Vector3.RotateTowards(lookDirection, TarLookDir, rotateSpeed * Mathf.Deg2Rad * Time.deltaTime, 1000);
 			lookDirection = lookDirection.normalized;
+			
 		}
 		
 		// Calculate actual motion
@@ -67,5 +110,6 @@ public class Character : MonoBehaviour {
 		
 		transform.rotation = Quaternion.LookRotation(lookDirection);
 		
+		curAnim.Update();
 	}
 }
